@@ -257,6 +257,7 @@ ipaddr_aton(const char *cp, ip_addr_t *addr)
  * @return pointer to a global static (!) buffer that holds the ASCII
  *         represenation of addr
  */
+__export
 char *
 ipaddr_ntoa(const ip_addr_t *addr)
 {

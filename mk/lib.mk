@@ -191,7 +191,7 @@ CORELIBOBJS = \
 	memcpy.o memset.o memcmp.o printf.o strncmp.o vfprintf.o 	\
 	strlen.o vsnprintf.o snprintf.o stpcpy.o strcmp.o strdup.o 	\
 	strcpy.o strncpy.o setjmp.o fopen.o fread.o fread2.o puts.o 	\
-	strtoul.o strntoumax.o strcasecmp.o 				\
+	strtoul.o atoi.o strntoumax.o strcasecmp.o 			\
 	sprintf.o strlcat.o strchr.o strlcpy.o strncasecmp.o ctypes.o 	\
 	fputs.o fwrite2.o fwrite.o fgetc.o fclose.o lmalloc.o 		\
 	sys/err_read.o sys/err_write.o sys/null_read.o 			\
