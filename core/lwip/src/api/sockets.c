@@ -180,6 +180,7 @@ static void lwip_setsockopt_internal(void *arg);
  * Initialize this module. This function has to be called before any other
  * functions in this module!
  */
+__export
 void
 lwip_socket_init(void)
 {
@@ -545,6 +546,7 @@ lwip_listen(int s, int backlog)
   return 0;
 }
 
+__export
 int
 lwip_recvfrom(int s, void *mem, size_t len, int flags,
         struct sockaddr *from, socklen_t *fromlen)
@@ -784,6 +786,7 @@ lwip_send(int s, const void *data, size_t size, int flags)
   return (err == ERR_OK ? (int)size : -1);
 }
 
+__export
 int
 lwip_sendto(int s, const void *data, size_t size, int flags,
        const struct sockaddr *to, socklen_t tolen)
@@ -931,6 +934,7 @@ lwip_sendto(int s, const void *data, size_t size, int flags,
   return (err == ERR_OK ? short_size : -1);
 }
 
+__export
 int
 lwip_socket(int domain, int type, int protocol)
 {
