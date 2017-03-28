@@ -12,37 +12,46 @@
 
 
 /*
- * deterboot.c
+ * deterboot-test.c
  *
- * This module implements the Deter stage-0 boot loader functionality
+ * This module tests the Deter stage-0 boot loader code
  */
 
+#include <string.h>
+#include <stdio.h>
+#include <consoles.h>
 #include <syslinux/pxe.h>
 #include <dhcp.h>
-#include <stdio.h>
+#include <net.h>
+#include <netinet/in.h>
+#include <lwip/sockets.h>
+
 #include "deterboot.h"
+#include "testing.h"
 
-int getNetInfo(struct NetInfo *info)
+struct TestResult* test_getNetInfo(void);
+
+int main(void)
 {
-  void *dhcpdata = NULL;
-  size_t dhcplen = 0;
-  int err = pxe_get_cached_info(
-      PXENV_PACKET_TYPE_DHCP_ACK, 
-      &dhcpdata, 
-      &dhcplen);
+  struct TestRun *tr = new_TestRun();
 
+  processResult(tr, test_getNetInfo());
+  
+  tr->dump(tr);
+}
+
+struct TestResult* test_getNetInfo(void)
+{
+  struct TestResult *r = new_TestResult();
+
+  struct NetInfo netinfo;
+  int err = getNetInfo(&netinfo);
   if(err) 
   {
-    printf("Failed to get network information\n");
-    return err;
+    testFatal(r, "getNetInfo failed %d", err);
   }
 
-  struct dhcp_packet *pkt = (struct dhcp_packet*)dhcpdata;
-  info->myAddr.s_addr = pkt->yiaddr;
-  info->bossAddr.s_addr = pkt->siaddr;
+  testOK(r, "getNetInfo test passed");
 
-  printf("me: %s\n", inet_ntoa(info->myAddr));
-  printf("boss: %s\n", inet_ntoa(info->bossAddr));
-
-  return 0;
+  return r;
 }

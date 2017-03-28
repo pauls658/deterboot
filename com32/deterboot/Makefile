@@ -18,17 +18,22 @@ include $(MAKEDIR)/elf.mk
 
 #LNXLIBS	   = $(objdir)/com32/libutil/libutil_lnx.a
 
-MODULES	  = deterboot.c32
+MODULES	  = deterboot.c32 deterboot-test.c32
 TESTFILES =
 CFLAGS += -I$(topdir)/core
 CFLAGS += -I$(topdir)/core/lwip/src/include
 CFLAGS += -I$(topdir)/core/lwip/src/include/ipv4
 
-OBJS = deterboot.o
+OBJS = deterboot.o main.o
+
+TOBJS = deterboot-test.o testing.o deterboot.o
 
 all: $(MODULES) $(TESTFILES)
 
 deterboot.elf : $(OBJS) $(C_LIBS)
+	$(LD) $(LDFLAGS) -o $@ $^
+
+deterboot-test.elf : $(TOBJS) $(C_LIBS)
 	$(LD) $(LDFLAGS) -o $@ $^
 
 tidy dist:
