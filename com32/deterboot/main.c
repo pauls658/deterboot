@@ -33,6 +33,9 @@ int main(void)
   struct NetInfo netinfo;
   int err = getNetInfo(&netinfo);
   if(err) return 1;
+  
+  printf("me: %s\n", inet_ntoa(netinfo.myAddr));
+  printf("boss: %s\n", inet_ntoa(netinfo.bossAddr));
 
   struct sockaddr_in dest;
   dest.sin_family = AF_INET;
@@ -55,12 +58,13 @@ int main(void)
 
   printf("awating muffin response\n");
   char buf[128];
+  socklen_t slen = sizeof(dest);
   n = recvfrom(
       sock, 
       buf, 
       sizeof(buf), 
       0, 
-      (struct sockaddr*)&dest, sizeof(dest)
+      (struct sockaddr*)&dest, &slen
   );
   printf("muffin response (%d) %.*s\n", n, n, buf);
 

@@ -398,6 +398,7 @@ lwip_accept(int s, struct sockaddr *addr, socklen_t *addrlen)
   return newsock;
 }
 
+__export
 int
 lwip_bind(int s, const struct sockaddr *name, socklen_t namelen)
 {
@@ -438,6 +439,7 @@ lwip_bind(int s, const struct sockaddr *name, socklen_t namelen)
   return 0;
 }
 
+__export
 int
 lwip_close(int s)
 {
