@@ -31,7 +31,8 @@
 
 struct TestResult* test_getNetInfo(void);
 struct TestResult* test_muffinTest(void);
-struct TestResult* test_bootWhat(void);
+struct TestResult* test_bootWhat_wait(void);
+struct TestResult* test_bootWhat_mfs(void);
   
 struct NetInfo netinfo;
 
@@ -43,7 +44,8 @@ int main(void)
 
   processResult(tr, test_getNetInfo());
   //processResult(tr, test_muffinTest());
-  processResult(tr, test_bootWhat());
+  //processResult(tr, test_bootWhat_wait());
+  processResult(tr, test_bootWhat_mfs());
   
   tr->dump(tr);
 }
@@ -108,51 +110,77 @@ struct TestResult* test_muffinTest(void)
   return r;
 }
 
-struct TestResult* test_bootWhat(void)
+struct TestResult* test_bootWhat_wait(void)
 {
   struct TestResult *r = new_TestResult();
 
-  struct boot_info bi_out = {
-    .version = BIVERSION_CURRENT,
-    .opcode = BIOPCODE_BOOTWHAT_REQUEST,
-    .status = 0
-  };
-  memset(&bi_out.data, 0, MAX_BOOT_DATA);
-
-  struct boot_info bi_in;
-  memset(&bi_in, 0, sizeof(struct boot_info));
-
-  struct Question question = {
-    .who = netinfo.bossAddr,
-    .port = 6969,
-    .response_port = 9696,
-    .what = &bi_out,
-    .what_size = sizeof(struct boot_info),
-    .me = netinfo.myAddr,
-    .response = &bi_in,
-    .response_size = sizeof(struct boot_info)
-  };
-
-  int err = ask(&question);
-  if(err != QUESTION_OK)
+  struct BootWhatResponse br;
+  int err = bootWhat(&netinfo, &br);
+  
+  if(err != BOOTWHAT_OK)
   {
     testFatal(r, "boot-what comms failure %d", err);
+    return r;
   }
   
-  if(bi_in.opcode != BIOPCODE_BOOTWHAT_REPLY)
+  if(br.info.opcode != BIOPCODE_BOOTWHAT_REPLY)
   {
-    testError("unexpected opcode: %d\n", bi_in.opcode);
+    testError(r, "unexpected opcode: %d\n", br.info.opcode);
     return r;
   }
 
-  struct boot_what *bw = (struct boot_what*)&bi_in.data;
-  
-  if(bw->type != BIBOOTWHAT_TYPE_WAIT)
+  if(br.what->type != BIBOOTWHAT_TYPE_WAIT)
   {
-    testError("unexpected bootwhat type: %d\n", bw->type);
+    testError(r, "unexpected bootwhat type: %d\n", br.what->type);
+  }
+  
+  testOK(r, "boot-what wait test finished");
+  return r;
+}
+
+struct TestResult* test_bootWhat_mfs(void)
+{
+  struct TestResult *r = new_TestResult();
+
+  struct BootWhatResponse br;
+  int err = bootWhat(&netinfo, &br);
+  
+  if(err != BOOTWHAT_OK)
+  {
+    testFatal(r, "boot-what comms failure %d", err);
+    return r;
+  }
+  
+  if(br.info.opcode != BIOPCODE_BOOTWHAT_REPLY)
+  {
+    testError(r, "unexpected opcode: %d\n", br.info.opcode);
+    return r;
   }
 
+  if(br.what->type != BIBOOTWHAT_TYPE_MFS)
+  {
+    testError(r, "unexpected bootwhat type: %d\n", br.what->type);
+    return r;
+  }
 
-  testOK(r, "boot-what test finished");
+  if(strcmp(br.what->what.mfs, "http://192.168.33.1/images/linux-mfs") != 0)
+  {
+    testError(r, "unexpected mfs path: %s\n", br.what->what.mfs);
+    return r;
+  }
+
+  const int sz = 1024;
+  void *buf = malloc(sz);
+  err = loadMFS(br.what->what.mfs, &buf, sz);
+
+  if(err != LOADMFS_OK)
+  {
+    testError(r, "error loading mfs: %d", err);
+  }
+
+  char *mfs_data = buf;
+  printf("mfs data: %s\n", mfs_data);
+  
+  testError(r, "boot-what MFS failed to load MFS");
   return r;
 }

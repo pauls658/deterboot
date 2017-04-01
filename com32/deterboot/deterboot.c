@@ -22,6 +22,13 @@
 #include <stdio.h>
 #include <lwip/sockets.h>
 #include "deterboot.h"
+#include <syslinux/loadfile.h>
+
+/*-----------------------------------------------------------------------------
+ *
+ * PXE Network Environment
+ *
+ *---------------------------------------------------------------------------*/
 
 int getNetInfo(struct NetInfo *info)
 {
@@ -44,6 +51,12 @@ int getNetInfo(struct NetInfo *info)
 
   return 0;
 }
+
+/*-----------------------------------------------------------------------------
+ *
+ * Question interface
+ *
+ *---------------------------------------------------------------------------*/
 
 size_t ask(struct Question *q)
 {
@@ -92,3 +105,66 @@ size_t ask(struct Question *q)
 
   return result;
 }
+
+/*-----------------------------------------------------------------------------
+ *
+ * Bootinfo protocol
+ *
+ *---------------------------------------------------------------------------*/
+
+int bootWhat(const struct NetInfo *netinfo, struct BootWhatResponse *br)
+{
+  struct boot_info bi_out = {
+    .version = BIVERSION_CURRENT,
+    .opcode = BIOPCODE_BOOTWHAT_REQUEST,
+    .status = 0
+  };
+  memset(&bi_out.data, 0, MAX_BOOT_DATA);
+
+  struct boot_info bi_in;
+  memset(&bi_in, 0, sizeof(struct boot_info));
+
+  struct Question question = {
+    .who = netinfo->bossAddr,
+    .port = BICLIENT_PORT,
+    .response_port = BISERVER_PORT,
+    .what = &bi_out,
+    .what_size = sizeof(struct boot_info),
+    .me = netinfo->myAddr,
+    .response = &bi_in,
+    .response_size = sizeof(struct boot_info)
+  };
+
+  int err = ask(&question);
+  if(err != QUESTION_OK)
+  {
+    return BOOTWHAT_COMMS_ERROR;
+  }
+
+  memcpy(&br->info, &bi_in, sizeof(struct boot_info));
+  br->what = NULL;
+
+  if(bi_in.opcode == BIOPCODE_BOOTWHAT_REPLY)
+  {
+    br->what = (struct boot_what*)&br->info.data;
+  }
+
+  return BOOTWHAT_OK;
+}
+
+/*-----------------------------------------------------------------------------
+ *
+ * Boot loading functionality
+ *
+ *---------------------------------------------------------------------------*/
+
+int loadMFS(const char *path, void **buf, size_t len)
+{
+  return loadfile(path, buf, len);
+}
+
+void bootMFS(const void *data)
+{
+
+}
+

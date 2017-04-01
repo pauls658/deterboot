@@ -19,12 +19,25 @@
 
 #include <netinet/in.h>
 
+/*-----------------------------------------------------------------------------
+ *
+ * PXE Network Environment
+ *
+ *---------------------------------------------------------------------------*/
+
 struct NetInfo
 {
   struct in_addr myAddr,
                  bossAddr;
 };
+
 int getNetInfo(struct NetInfo *);
+
+/*-----------------------------------------------------------------------------
+ *
+ * Question interface
+ *
+ *---------------------------------------------------------------------------*/
 
 struct Question
 {
@@ -40,13 +53,19 @@ struct Question
 };
 size_t ask(struct Question *q);
 
-static const int QUESTION_OK           = 0x00;
-static const int QUESTION_PARTIAL_SEND = 0x01;
+static const int 
+QUESTION_OK           = 0x00,
+QUESTION_PARTIAL_SEND = 0x01;
+
+/*-----------------------------------------------------------------------------
+ *
+ * Bootinfo protocol
+ *
+ *---------------------------------------------------------------------------*/
 
 #define MAX_BOOT_DATA  512
 #define  MAX_BOOT_PATH 256
 static const int BIVERSION_CURRENT = 1;
-
 
 struct boot_info 
 {
@@ -56,71 +75,84 @@ struct boot_info
   char	data[MAX_BOOT_DATA];
 };
 
-static const int BIOPCODE_BOOTWHAT_REQUEST       = 1;
-static const int BIOPCODE_BOOTWHAT_REPLY         = 2; /* What to boot reply */
-static const int BIOPCODE_BOOTWHAT_ACK           = 3; /* Ack to Reply */
-static const int BIOPCODE_BOOTWHAT_ORDER         = 4; /* Unsolicited command */
-static const int BIOPCODE_BOOTWHAT_INFO          = 5; /* Request for bootinfo */
-static const int BIOPCODE_BOOTWHAT_KEYED_REQUEST = 6; /* Request for bootinfo, with key data stuffed into the data portion */
+static const int 
+BIOPCODE_BOOTWHAT_REQUEST       = 1,
+BIOPCODE_BOOTWHAT_REPLY         = 2, /* What to boot reply */
+BIOPCODE_BOOTWHAT_ACK           = 3, /* Ack to Reply */
+BIOPCODE_BOOTWHAT_ORDER         = 4, /* Unsolicited command */
+BIOPCODE_BOOTWHAT_INFO          = 5, /* Request for bootinfo */
+BIOPCODE_BOOTWHAT_KEYED_REQUEST = 6; /* Request for bootinfo, with key data 
+                                        stuffed into the data portion */
 
 struct boot_what {
-	short	flags;
-	short	type;
-	union {
-		/*
-		 * Type is BIBOOTWHAT_TYPE_PART
-		 *
-		 * Specifies the partition number.
-		 */
-		int			partition;
-		
-		/*
-		 * Type is BIBOOTWHAT_TYPE_SYSID
-		 *
-		 * Specifies the PC BIOS filesystem type.
-		 */
-		int			sysid;
-		
-		/*
-		 * Type is BIBOOTWHAT_TYPE_MB
-		 *
-		 * Specifies a multiboot kernel pathway suitable for TFTP.
-		 */
-		struct {
-			struct in_addr	tftp_ip;
-			char		filename[MAX_BOOT_PATH];
-		} mb;
+  short	flags;
+  short	type;
+  union {
+    // type = BIBOOTWHAT_TYPE_PART Specifies the partition number
+    int			partition;
 
-		/*
-		 * Type is BIBOOTWHAT_TYPE_MFS
-		 *
-		 * Specifies network path to MFS (boss:/tftpboot/frisbee)
-		 * With no host spec, defaults to bootinfo server IP.
-		 */
-		char			mfs[MAX_BOOT_PATH];
+    // type = BIBOOTWHAT_TYPE_SYSID Specifies the PC BIOS filesystem type
+    int			sysid;
 
-		/*
-		 * Type is BIBOOTWHAT_TYPE_DISKPART
-		 *
-		 * Specifies the BIOS disk and partition numbers.
-		 */
-		struct {
-			int disk;
-			int partition;
-		} dp;
-	} what;
-	/*
-	 * Kernel and command line to pass to boot loader or multiboot kernel.
-	 */
-	char	cmdline[1];
+    /* type is BIBOOTWHAT_TYPE_MB
+       specifies a multiboot kernel pathway suitable for TFTP.  */
+    struct {
+      struct in_addr	tftp_ip;
+      char		filename[MAX_BOOT_PATH];
+    } mb;
+
+    /* type = BIBOOTWHAT_TYPE_MFS
+       Specifies network path to MFS (boss:/tftpboot/frisbee)
+       With no host spec, defaults to bootinfo server IP.  */
+    char			mfs[MAX_BOOT_PATH];
+
+    /* type = BIBOOTWHAT_TYPE_DISKPART
+       Specifies the BIOS disk and partition numbers.  */
+    struct {
+      int disk;
+      int partition;
+    } dp;
+  } what;
+
+  // Kernel and command line to pass to boot loader or multiboot kernel.
+  char	cmdline[1];
 };
 
-static const int BIBOOTWHAT_TYPE_PART     = 1;	/* Boot a partition number */
-static const int BIBOOTWHAT_TYPE_SYSID    = 2;	/* Boot a system ID */
-static const int BIBOOTWHAT_TYPE_MB       = 3;	/* Boot a multiboot image */
-static const int BIBOOTWHAT_TYPE_WAIT     = 4;	/* Wait, no boot until later */
-static const int BIBOOTWHAT_TYPE_REBOOT   = 5;	/* Reboot */
-static const int BIBOOTWHAT_TYPE_AUTO     = 6;	/* Do a bootinfo query */
-static const int BIBOOTWHAT_TYPE_MFS      = 7;	/* Boot an MFS from server:/path */
-static const int BIBOOTWHAT_TYPE_RESTART  = 8;	/* Restart ourselves without reset */
-static const int BIBOOTWHAT_TYPE_DISKPART = 9; /* Boot a partition from a specific disk */
+static const int 
+BIBOOTWHAT_TYPE_PART     = 1,	/* Boot a partition number */
+BIBOOTWHAT_TYPE_SYSID    = 2,	/* Boot a system ID */
+BIBOOTWHAT_TYPE_MB       = 3,	/* Boot a multiboot image */
+BIBOOTWHAT_TYPE_WAIT     = 4,	/* Wait, no boot until later */
+BIBOOTWHAT_TYPE_REBOOT   = 5,	/* Reboot */
+BIBOOTWHAT_TYPE_AUTO     = 6,	/* Do a bootinfo query */
+BIBOOTWHAT_TYPE_MFS      = 7,	/* Boot an MFS from server:/path */
+BIBOOTWHAT_TYPE_RESTART  = 8,	/* Restart ourselves without reset */
+BIBOOTWHAT_TYPE_DISKPART = 9; /* Boot a partition from a specific disk */
+
+static const unsigned short 
+BICLIENT_PORT = 6969,
+BISERVER_PORT = 9696;
+
+struct BootWhatResponse
+{
+  struct boot_info info;
+  struct boot_what *what;
+};
+
+static const int 
+BOOTWHAT_OK          = 0x00,
+BOOTWHAT_COMMS_ERROR = 0x01;
+
+int bootWhat(const struct NetInfo *netinfo, struct BootWhatResponse *br);
+
+/*-----------------------------------------------------------------------------
+ *
+ * Boot loading functionality
+ *
+ *---------------------------------------------------------------------------*/
+
+static const int
+LOADMFS_OK    = 0x00;
+
+int loadMFS(const char *path, void **buf, size_t len);
+void bootMFS(const void *data);
