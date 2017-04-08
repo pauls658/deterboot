@@ -398,6 +398,7 @@ lwip_accept(int s, struct sockaddr *addr, socklen_t *addrlen)
   return newsock;
 }
 
+__export
 int
 lwip_bind(int s, const struct sockaddr *name, socklen_t namelen)
 {
@@ -438,6 +439,7 @@ lwip_bind(int s, const struct sockaddr *name, socklen_t namelen)
   return 0;
 }
 
+__export
 int
 lwip_close(int s)
 {
@@ -464,13 +466,14 @@ lwip_close(int s)
   return 0;
 }
 
+__export
 int
 lwip_connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
   struct lwip_sock *sock;
   err_t err;
   const struct sockaddr_in *name_in;
-
+    
   sock = get_socket(s);
   if (!sock) {
     return -1;
@@ -732,18 +735,21 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
   return off;
 }
 
+__export
 int
 lwip_read(int s, void *mem, size_t len)
 {
   return lwip_recvfrom(s, mem, len, 0, NULL, NULL);
 }
 
+__export
 int
 lwip_recv(int s, void *mem, size_t len, int flags)
 {
   return lwip_recvfrom(s, mem, len, flags, NULL, NULL);
 }
 
+__export
 int
 lwip_send(int s, const void *data, size_t size, int flags)
 {
@@ -991,6 +997,7 @@ lwip_socket(int domain, int type, int protocol)
   return i;
 }
 
+__export
 int
 lwip_write(int s, const void *data, size_t size)
 {
@@ -1075,6 +1082,7 @@ lwip_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_set *excep
 /**
  * Processing exceptset is not yet implemented.
  */
+__export
 int
 lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
             struct timeval *timeout)
@@ -1430,18 +1438,21 @@ lwip_getaddrname(int s, struct sockaddr *name, socklen_t *namelen, u8_t local)
   return 0;
 }
 
+__export
 int
 lwip_getpeername(int s, struct sockaddr *name, socklen_t *namelen)
 {
   return lwip_getaddrname(s, name, namelen, 0);
 }
 
+__export
 int
 lwip_getsockname(int s, struct sockaddr *name, socklen_t *namelen)
 {
   return lwip_getaddrname(s, name, namelen, 1);
 }
 
+__export
 int
 lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen)
 {
@@ -1615,7 +1626,6 @@ lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen)
       err = ENOPROTOOPT;
   }  /* switch */
 
-   
   if (err != ERR_OK) {
     sock_set_errno(sock, err);
     return -1;
@@ -1843,6 +1853,7 @@ lwip_getsockopt_internal(void *arg)
   sys_sem_signal(&sock->conn->op_completed);
 }
 
+__export
 int
 lwip_setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen)
 {
@@ -2185,8 +2196,9 @@ lwip_setsockopt_internal(void *arg)
       } else {
         tcp_nagle_enable(sock->conn->pcb.tcp);
       }
-      LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_setsockopt(%d, IPPROTO_TCP, TCP_NODELAY) -> %s\n",
-                  s, (*(int *)optval)?"on":"off") );
+      ///XXX: the below causes a crash
+      //LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_setsockopt(%d, IPPROTO_TCP, TCP_NODELAY) -> %s\n",
+      //            s, (*(int *)optval)?"on":"off") );
       break;
     case TCP_KEEPALIVE:
       sock->conn->pcb.tcp->keep_idle = (u32_t)(*(int*)optval);
@@ -2320,6 +2332,7 @@ lwip_ioctl(int s, long cmd, void *argp)
  * Currently only the commands F_GETFL and F_SETFL are implemented.
  * Only the flag O_NONBLOCK is implemented.
  */
+__export
 int
 lwip_fcntl(int s, int cmd, int val)
 {

@@ -1,0 +1,23 @@
+### Syslinux Boot Process
+### ~~~~~~~~~~~~~~~~~~~~~
+
+_start1                                       [ pxelinux.asm      #init screen, pxe, fs
+| load_env32()                                [ load_env32.c      
+  | init_module_subsystem()                   [ "                 #add core module
+  | start_ldlinux()                           [ "
+  | spawn_load(LDLINUX)                       [ exec.c            #load & start ldlinux (ldlinux.c32, ldlinux.e32 or ldlinux.e64)
+    | module_load                             [ elf_module.c
+    | exit(module->main)                      [ exit.c            #exit the current module and jump into the one being loaded
+      ~                                       [
+      | main                                  [ ldlinux.c
+        | parse_configs()                     [ readconfig.c
+        | load_kernel()                       [ ldlinux.c
+          | execute()                         [ execute.c
+            | create_args_and_load(cmd)       [ load_env32.c
+              | spawn_load(cmd)               [ exec.c
+                | module_load                 [ elf_module.c
+                | exit(module->main)          [ exit.c
+                  ~
+                  | <your module runs here>
+                
+

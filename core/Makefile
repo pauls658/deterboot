@@ -105,6 +105,10 @@ NASMOPT  += $(NASMDEBUG)
 
 PREPCORE = $(OBJ)/../lzo/prepcore
 
+# Uncomment below to turn on lwip debugging
+# see core/lwip/src/include/lwip/opt.h for more fine grained debugging control
+#CFLAGS += -DLWIP_DEBUG
+
 CFLAGS += -D__SYSLINUX_CORE__ -D__FIRMWARE_$(FIRMWARE)__ \
 	  -I$(objdir) -DLDLINUX=\"$(LDLINUX)\"
 

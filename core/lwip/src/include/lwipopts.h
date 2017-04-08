@@ -4,6 +4,8 @@
 #include <byteswap.h>
 #include <netinet/in.h>
 
+#define ERRNO 1
+
 #define SYS_LIGHTWEIGHT_PROT	1
 #define LWIP_NETIF_API		1
 #define LWIP_DNS		1

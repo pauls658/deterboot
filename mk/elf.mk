@@ -79,6 +79,8 @@ C_LIBS	   += $(objdir)/com32/libutil/libutil.c32 $(GPLLIB) \
 C_LNXLIBS  = $(objdir)/com32/libutil/libutil_lnx.a \
 	     $(objdir)/com32/elflink/ldlinux/ldlinux_lnx.a
 
+LIBHIREDIS = $(objdir)/com32/hiredis/libhiredis.c32
+
 .SUFFIXES: .lss .c .o
 
 .PRECIOUS: %.o

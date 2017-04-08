@@ -82,6 +82,7 @@ SFLAGS     = $(GCCOPT) $(GCCWARN) \
 COM32LD	   = $(com32)/lib/$(ARCH)/elf.ld
 LDFLAGS    = -m elf_$(ARCH) -shared --hash-style=gnu -T $(COM32LD)
 LIBGCC    := $(shell $(CC) $(GCCOPT) --print-libgcc)
+LIBHIREDIS = $(com32)/hiredis/libhiredis.c32
 
 LNXCFLAGS  = -I$(com32)/libutil/include $(GCCWARN) -O -g \
 	     -D_GNU_SOURCE -D_FORTIFY_SOURCE=0 -Wno-error

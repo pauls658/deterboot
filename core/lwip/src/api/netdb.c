@@ -231,6 +231,7 @@ lwip_gethostbyname_r(const char *name, struct hostent *ret, char *buf,
  *
  * @param ai struct addrinfo to free
  */
+__export
 void
 lwip_freeaddrinfo(struct addrinfo *ai)
 {
@@ -262,6 +263,7 @@ lwip_freeaddrinfo(struct addrinfo *ai)
  * @param res pointer to a pointer where to store the result (set to NULL on failure)
  * @return 0 on success, non-zero on failure
  */
+__export
 int
 lwip_getaddrinfo(const char *nodename, const char *servname,
        const struct addrinfo *hints, struct addrinfo **res)
