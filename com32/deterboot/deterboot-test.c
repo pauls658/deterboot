@@ -35,8 +35,6 @@ void testk(int result);
 int test_getNetInfo(void);
 int test_bootWhat_mfs(void);
 
-//struct TestResult* test_bootWhat_mfs(void);
-  
 struct NetInfo netinfo;
 
 struct WTFTest wtf = {
@@ -126,56 +124,3 @@ int test_bootWhat_mfs(void)
   
   return TEST_OK;
 }
-
-#if 0
-struct TestResult* test_bootWhat_mfs(void)
-{
-  struct TestResult *r = new_TestResult();
-
-  struct BootWhatResponse br;
-  int err = bootWhat(&netinfo, &br);
-  
-  if(err != BOOTWHAT_OK)
-  {
-    testFatal(r, "boot-what comms failure %d", err);
-    return r;
-  }
-  
-  if(br.info.opcode != BIOPCODE_REPLY)
-  {
-    testError(r, "unexpected opcode: %d\n", br.info.opcode);
-    return r;
-  }
-
-  if(br.what->type != BIBOOTWHAT_TYPE_MFS)
-  {
-    testError(r, "unexpected bootwhat type: %d\n", br.what->type);
-    return r;
-  }
-
-  printf("load mfs: %s\n", br.what->what.mfs);
-
-  /*
-  if(strcmp(br.what->what.mfs, "http://192.168.33.1/images/linux-mfs") != 0)
-  {
-    testError(r, "unexpected mfs path: %s\n", br.what->what.mfs);
-    return r;
-  }
-
-  const int sz = 1024;
-  void *buf = malloc(sz);
-  err = loadMFS(br.what->what.mfs, &buf, sz);
-
-  if(err != LOADMFS_OK)
-  {
-    testError(r, "error loading mfs: %d", err);
-  }
-
-  char *mfs_data = buf;
-  printf("mfs data: %s\n", mfs_data);
-  
-  testError(r, "boot-what MFS failed to load MFS");
-  */
-  return r;
-}
-#endif
