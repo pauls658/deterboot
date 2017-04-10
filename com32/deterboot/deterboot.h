@@ -100,7 +100,7 @@ enum BIwhat {
 
 struct boot_what {
   short	flags;
-  enum BIwhat type;
+  short type;
   union {
     // type = BIBOOTWHAT_TYPE_PART Specifies the partition number
     int			partition;
@@ -158,4 +158,4 @@ static const int
 LOADMFS_OK    = 0x00;
 
 int loadMFS(const char *path, void **buf, size_t *len);
-void bootMFS(const void *data);
+int bootMFS(const void *path);

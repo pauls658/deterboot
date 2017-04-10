@@ -24,11 +24,12 @@
 ///
 /// Test Constants
 ///
-
-static const int TEST_FATAL   = -1;
-static const int TEST_ERROR   =  1;
-static const int TEST_WARNING =  2;
-static const int TEST_OK      =  0;
+enum {
+  TEST_FATAL   = -1,
+  TEST_ERROR   =  1,
+  TEST_WARNING =  2,
+  TEST_OK      =  0
+};
 
 ///
 /// Test Diagnostic

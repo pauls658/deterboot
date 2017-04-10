@@ -30,10 +30,12 @@
 #include "testing.h"
 #include "walrus.h"
 
-struct TestResult* test_getNetInfo(void);
-struct TestResult* test_muffinTest(void);
-struct TestResult* test_bootWhat_wait(void);
-struct TestResult* test_bootWhat_mfs(void);
+void testk(int result);
+
+int test_getNetInfo(void);
+int test_bootWhat_mfs(void);
+
+//struct TestResult* test_bootWhat_mfs(void);
   
 struct NetInfo netinfo;
 
@@ -48,108 +50,84 @@ int main(void)
 {
   lwip_socket_init();
 
-  //struct TestRun *tr = new_TestRun();
-  
-  WTFok(&wtf, "grrrrrr!");
-  printf("wtf finished\n");
+  WTFok(&wtf, "starting boot0 test");
 
-  //processResult(tr, test_getNetInfo());
-  //processResult(tr, test_muffinTest());
-  //processResult(tr, test_bootWhat_wait());
-  //processResult(tr, test_bootWhat_mfs());
-  
-  //tr->dump(tr);
+  testk(test_getNetInfo());
+  testk(test_bootWhat_mfs());
+
+  printf("boot0 test finished\n");
 }
 
-struct TestResult* test_getNetInfo(void)
+void testk(int result)
 {
-  struct TestResult *r = new_TestResult();
+  if(result != TEST_OK)
+  {
+    exit(1);
+  }
+}
 
+int test_getNetInfo(void)
+{
   int err = getNetInfo(&netinfo);
   if(err) 
   {
-    testFatal(r, "getNetInfo failed %d", err);
+    WTFerror(&wtf, "getNetInfo failed %d", err);
+    return TEST_ERROR;
   }
 
   u32_t bossExpected = inet_addr("192.168.252.1"); 
   if(bossExpected != netinfo.bossAddr.s_addr)
   {
-    testError(r, "unexpected boss address %s", inet_ntoa(netinfo.bossAddr));
+    WTFerror(&wtf, "unexpected boss address %s", inet_ntoa(netinfo.bossAddr));
+    return TEST_ERROR;
   }
 
   WTFok(&wtf, "getNetInfo test finished");
-  testOK(r, "getNetInfo test finished");
-
-  return r;
+  return TEST_OK;
 }
 
-struct TestResult* test_muffinTest(void)
+int test_bootWhat_mfs(void)
 {
-  struct TestResult *r = new_TestResult();
-
-  char buf[256];
-  char *what = "Do you know the muffin man?";
-  struct Question question = {
-    .who = netinfo.bossAddr,
-    .port = 4747,
-    .response_port = 4747,
-    .what = what,
-    .what_size = strlen(what),
-    .me = netinfo.myAddr,
-    .response = buf,
-    .response_size = 256
-  };
-
-  int err = ask(&question);
-  if(err != QUESTION_OK)
-  {
-    testFatal(r, "muffin challenge comms failure %d", err);
-  }
-  
-  char *expectedResponse = "The muffin man is ME!";
-  size_t len = strlen(expectedResponse);
-  if(strncmp(expectedResponse, question.response, len) != 0)
-  {
-    testFatal(r, 
-        "unexpected muffin challenge response: %.*s", 
-        question.in_sz, 
-        question.response);
-  }
-
-  testOK(r, "muffin challenge finished");
-    
-
-  return r;
-}
-
-struct TestResult* test_bootWhat_wait(void)
-{
-  struct TestResult *r = new_TestResult();
-
   struct BootWhatResponse br;
   int err = bootWhat(&netinfo, &br);
   
   if(err != BOOTWHAT_OK)
   {
-    testFatal(r, "boot-what comms failure %d", err);
-    return r;
+    WTFerror(&wtf, "boot-what comms failure %d", err);
+    return TEST_ERROR;
   }
   
   if(br.info.opcode != BIOPCODE_REPLY)
   {
-    testError(r, "unexpected opcode: %d", br.info.opcode);
-    return r;
+    WTFerror(&wtf, "unexpected opcode: %d", br.info.opcode);
+    return TEST_ERROR;
   }
 
-  if(br.what->type != BIBOOTWHAT_TYPE_WAIT)
+  if(br.what->type != BIBOOTWHAT_TYPE_MFS)
   {
-    testError(r, "unexpected bootwhat type: %d", br.what->type);
+    WTFerror(&wtf, "unexpected bootwhat type: %d", br.what->type);
+    return TEST_ERROR;
+  }
+
+  if(strcmp(br.what->what.mfs, "http://192.168.252.1/linux-mfs") != 0)
+  {
+    WTFerror(&wtf, "unexpected mfs path: %s\n", br.what->what.mfs);
+    return TEST_ERROR;
   }
   
-  testOK(r, "boot-what wait test finished");
-  return r;
+  WTFok(&wtf, "boot-what wait test finished - jumping into mfs now ...");
+
+  err = bootMFS(br.what->what.mfs);
+
+  if(err)
+  {
+    WTFerror(&wtf, "booting mfs failed %d", err);
+  }
+  
+  return TEST_OK;
 }
 
+#if 0
 struct TestResult* test_bootWhat_mfs(void)
 {
   struct TestResult *r = new_TestResult();
@@ -200,3 +178,4 @@ struct TestResult* test_bootWhat_mfs(void)
   */
   return r;
 }
+#endif

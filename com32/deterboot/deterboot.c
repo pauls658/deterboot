@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <lwip/sockets.h>
 #include <syslinux/loadfile.h>
+#include <syslinux/boot.h>
 #include <string.h>
 #include "deterboot.h"
 
@@ -165,8 +166,16 @@ int loadMFS(const char *path, void **buf, size_t *len)
   return loadfile(path, buf, len);
 }
 
-void bootMFS(const void *data)
+int bootMFS(const void *path)
 {
+  const char *fmt =
+    "linux.c32 %s/bzImage initrd=%s/rootfs.cpio BOOT=live console=tty1 quiet";
 
+  size_t sz = snprintf(NULL, 0, fmt, path, path);
+  char *cmd = malloc(sz+1);
+  snprintf(cmd, sz+1, fmt, path, path);
+  cmd[sz] = 0;
+
+  return syslinux_run_command(cmd);
 }
 
