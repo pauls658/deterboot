@@ -39,7 +39,7 @@ struct NetInfo netinfo;
 
 struct WTFTest wtf = {
   .collector = "192.168.1.247", 
-  .test = "bootwait", 
+  .test = "boot-mfs", 
   .participant = "deterboot",
   .counter = 0
 };
@@ -48,9 +48,9 @@ int main(void)
 {
   lwip_socket_init();
 
-  WTFok(&wtf, "starting boot0 test");
-
   testk(test_getNetInfo());
+
+  WTFok(&wtf, "starting boot0 test");
   testk(test_bootWhat_mfs());
 
   printf("boot0 test finished\n");
@@ -72,6 +72,11 @@ int test_getNetInfo(void)
     WTFerror(&wtf, "getNetInfo failed %d", err);
     return TEST_ERROR;
   }
+
+  char *me = inet_ntoa(netinfo.myAddr);
+  char *buf = malloc(strlen(wtf.participant)+3);
+  sprintf(buf, "%s-%s", wtf.participant, &me[strlen(me)-3]);
+  wtf.participant = buf;
 
   u32_t bossExpected = inet_addr("192.168.252.1"); 
   if(bossExpected != netinfo.bossAddr.s_addr)
