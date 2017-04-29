@@ -176,6 +176,20 @@ int bootMFS(const void *path)
   snprintf(cmd, sz+1, fmt, path, path);
   cmd[sz] = 0;
 
-  return syslinux_run_command(cmd);
+  int result = syslinux_run_command(cmd);
+	free(cmd);
+	return result;
 }
 
+int chainBoot(const char *disk, int partition)
+{
+	const char *fmt = "chain.c32 %s %d";
+  size_t sz = snprintf(NULL, 0, fmt, disk, partition);
+  char *cmd = malloc(sz+1);
+  snprintf(cmd, sz+1, fmt, disk, partition);
+  cmd[sz] = 0;
+
+  int result = syslinux_run_command(cmd);
+	free(cmd);
+	return result;
+}

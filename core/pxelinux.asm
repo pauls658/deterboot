@@ -148,8 +148,8 @@ _start1:
 		mov si,syslinux_banner
 		call writestr_early
 
-		mov si,copyright_str
-		call writestr_early
+		;mov si,copyright_str
+		;call writestr_early
 
 ;
 ; do fs initialize
@@ -558,8 +558,7 @@ copyright_str   db 'Copyright (C) 1994-'
 err_bootfailed	db CR, LF, 'Boot failed: press a key to retry, or wait for reset...', CR, LF, 0
 bailmsg		equ err_bootfailed
 localboot_msg	db 'Booting from local disk...', CR, LF, 0
-syslinux_banner	db CR, LF, MY_NAME, ' ', VERSION_STR, ' ', MY_TYPE, ' '
-		db DATE_STR, ' ', 0
+syslinux_banner	db CR, LF, MY_NAME, '-0.1', CR, LF, 0
 
 ;
 ; Misc initialized (data) variables

@@ -159,3 +159,4 @@ LOADMFS_OK    = 0x00;
 
 int loadMFS(const char *path, void **buf, size_t *len);
 int bootMFS(const void *path);
+int chainBoot(const char *disk, int partition);

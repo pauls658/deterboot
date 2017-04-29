@@ -89,6 +89,23 @@ int test_getNetInfo(void)
   return TEST_OK;
 }
 
+int doMFSBoot(const char *path) 
+{
+	if(strcmp(path, "http://192.168.252.1/linux-mfs") != 0)
+	{
+		WTFerror(&wtf, "unexpected mfs path: %s\n", path);
+		return TEST_ERROR;
+	}
+	WTFok(&wtf, "jumping into mfs now ...");
+	return bootMFS(path);
+}
+
+int doChainBoot(const char *disk, int partition)
+{
+	WTFok(&wtf, "chainbooting into %s:%d ...", disk, partition);
+	return chainBoot(disk, partition);
+}
+
 int test_bootWhat_mfs(void)
 {
   struct BootWhatResponse br;
@@ -106,21 +123,22 @@ int test_bootWhat_mfs(void)
     return TEST_ERROR;
   }
 
-  if(br.what->type != BIBOOTWHAT_TYPE_MFS)
-  {
-    WTFerror(&wtf, "unexpected bootwhat type: %d", br.what->type);
-    return TEST_ERROR;
-  }
-
-  if(strcmp(br.what->what.mfs, "http://192.168.252.1/linux-mfs") != 0)
-  {
-    WTFerror(&wtf, "unexpected mfs path: %s\n", br.what->what.mfs);
-    return TEST_ERROR;
-  }
+	switch(br.what->type) {
+		case BIBOOTWHAT_TYPE_MFS: doMFSBoot(br.what->what.mfs); break;
+		case BIBOOTWHAT_TYPE_PART: doChainBoot("hd0", br.what->what.partition); break;
+		
+		// *** NOT IMPLEMENTED *** //
+		case BIBOOTWHAT_TYPE_SYSID:
+		case BIBOOTWHAT_TYPE_MB:
+		case BIBOOTWHAT_TYPE_WAIT:
+		case BIBOOTWHAT_TYPE_REBOOT:
+		case BIBOOTWHAT_TYPE_AUTO:
+		case BIBOOTWHAT_TYPE_RESTART:
+		case BIBOOTWHAT_TYPE_DISKPART:
+			WTFerror(&wtf, "unexpected bootwhat type: %d", br.what->type);
+			return TEST_ERROR;
+	}
   
-  WTFok(&wtf, "boot-what wait test finished - jumping into mfs now ...");
-
-  err = bootMFS(br.what->what.mfs);
 
   if(err)
   {

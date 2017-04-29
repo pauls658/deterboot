@@ -30,7 +30,7 @@
  %define IS_SYSLINUX 0
 %endif
 %ifdef IS_PXELINUX
- %define MY_NAME 'PXELINUX'
+ %define MY_NAME 'Deterboot'
  %if IS_LPXELINUX > 0
   %define MY_TYPE 'lwIP'
  %else
