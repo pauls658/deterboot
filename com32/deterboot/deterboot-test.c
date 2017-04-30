@@ -20,6 +20,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <consoles.h>
+#include <unistd.h>
 #include <syslinux/pxe.h>
 #include <dhcp.h>
 #include <net.h>
@@ -30,10 +31,9 @@
 #include "testing.h"
 #include "walrus.h"
 
-void testk(int result);
-
 int test_getNetInfo(void);
 int test_bootWhat_mfs(void);
+int tryBoot(void);
 
 struct NetInfo netinfo;
 
@@ -48,20 +48,16 @@ int main(void)
 {
   lwip_socket_init();
 
-  testk(test_getNetInfo());
+  test_getNetInfo();
 
-  WTFok(&wtf, "starting boot0 test");
-  testk(test_bootWhat_mfs());
-
-  printf("boot0 test finished\n");
-}
-
-void testk(int result)
-{
-  if(result != TEST_OK)
+  WTFok(&wtf, "starting boot process");
+  int response = tryBoot();
+  if(response == BIBOOTWHAT_TYPE_WAIT)
   {
-    exit(1);
+    do { sleep(5); } while(tryBoot() == BIBOOTWHAT_TYPE_WAIT);
   }
+
+  printf("boot process finished\n");
 }
 
 int test_getNetInfo(void)
@@ -106,7 +102,9 @@ int doChainBoot(const char *disk, int partition)
 	return chainBoot(disk, partition);
 }
 
-int test_bootWhat_mfs(void)
+
+
+int tryBoot(void)
 {
   struct BootWhatResponse br;
   int err = bootWhat(&netinfo, &br);
@@ -126,11 +124,14 @@ int test_bootWhat_mfs(void)
 	switch(br.what->type) {
 		case BIBOOTWHAT_TYPE_MFS: doMFSBoot(br.what->what.mfs); break;
 		case BIBOOTWHAT_TYPE_PART: doChainBoot("hd0", br.what->what.partition); break;
+    case BIBOOTWHAT_TYPE_WAIT: 
+      WTFok(&wtf, "entering wait period");
+      printf("\rwaiting ... ");
+      return BIBOOTWHAT_TYPE_WAIT;
 		
 		// *** NOT IMPLEMENTED *** //
 		case BIBOOTWHAT_TYPE_SYSID:
 		case BIBOOTWHAT_TYPE_MB:
-		case BIBOOTWHAT_TYPE_WAIT:
 		case BIBOOTWHAT_TYPE_REBOOT:
 		case BIBOOTWHAT_TYPE_AUTO:
 		case BIBOOTWHAT_TYPE_RESTART:
