@@ -61,10 +61,18 @@ int getNetInfo(struct NetInfo *info)
   info->domain[strlen(search)] = 0;
 
   char *host = (char*)opts[12].data;
-  printf("my hostname: %s\n", host);
-  info->host = malloc(strlen(host)+1);
-  strncpy(info->host, host, strlen(host));
-  info->host[strlen(host)] = 0;
+  if(host) {
+    printf("my hostname: %s\n", host);
+    info->host = malloc(strlen(host)+1);
+    strncpy(info->host, host, strlen(host));
+    info->host[strlen(host)] = 0;
+  } else {
+    const char* unk = "unknown";
+    printf("my hostname: %s\n", unk);
+    info->host = malloc(strlen(unk)+1);
+    strncpy(info->host, unk, strlen(unk));
+    info->host[strlen(unk)] = 0;
+  }
 
   return 0;
 }
