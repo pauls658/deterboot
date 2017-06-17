@@ -9,12 +9,36 @@
 #include <hiredis/hiredis.h>
 #include <errno.h>
 #include "walrus.h"
+#include <net.h>
+#include <netinet/in.h>
+#include <lwip/sockets.h>
+#include <lwip/netdb.h>
 
 
 int __WTFxxx(struct WTFTest *t, const char *level, const char *fmt, ...)
 {
   errno = 0;
-  redisContext *c = redisConnect(t->collector, REDIS_PORT);
+
+  struct addrinfo *info = NULL;
+  int error = getaddrinfo(
+      t->collector,
+      "6379", //redis port
+      NULL,
+      &info
+  );
+  if(error) {
+    printf("failed to resolve %s\n", t->collector);
+    return FAILURE;
+  }
+
+  struct sockaddr_in *addr;
+  addr = (struct sockaddr_in*)info->ai_addr;
+  char *addr_s = inet_ntoa(addr->sin_addr);
+  freeaddrinfo(info);
+
+
+  //redisContext *c = redisConnect(t->collector, REDIS_PORT);
+  redisContext *c = redisConnect(addr_s, REDIS_PORT);
   if(c == NULL || c->err)
   {
     printf("redis connect error: %s\n", c->errstr);
@@ -31,7 +55,7 @@ int __WTFxxx(struct WTFTest *t, const char *level, const char *fmt, ...)
   va_end(vl2);
   buf[sz] = 0;
 
-  //this is the only mutation we make to t, lets me thread safe about ot
+  //this is the only mutation we make to t, lets be thread safe about it
   //TODO this is a moot point right now b/c hiredis does not appear to be
   //thread safe, but i'll look into this soon.
 #ifdef __COM32__
@@ -54,24 +78,24 @@ int __WTFxxx(struct WTFTest *t, const char *level, const char *fmt, ...)
   if(c->err)
   {
     printf("redis set error: %s\n", c->errstr);
-    exit(FAILURE);
+    return FAILURE;
   }
   if(r->type == REDIS_REPLY_ERROR)
   {
     printf("redis set-reply error: %s\n", r->str);
-    exit(FAILURE);
+    return FAILURE;
   }
 
   r = (redisReply*)redisCommand(c, "TIME");
   if(c->err)
   {
     printf("redis time error: %s\n", c->errstr);
-    exit(FAILURE);
+    return FAILURE;
   }
   if(r->type != REDIS_REPLY_ARRAY)
   {
     printf("redis error: TIME did not return array\n");
-    exit(FAILURE);
+    return FAILURE;
   }
   redisReply *seconds = r->element[0];
   redisReply *microseconds= r->element[1];
@@ -90,12 +114,12 @@ int __WTFxxx(struct WTFTest *t, const char *level, const char *fmt, ...)
   if(c->err)
   {
     printf("redis del error (timestamp push): %s\n", c->errstr);
-    exit(FAILURE);
+    return FAILURE;
   }
   if(r->type == REDIS_REPLY_ERROR)
   {
     printf("redis del-reply error (timestamp push): %s\n", r->str);
-    exit(FAILURE);
+    return FAILURE;
   }
   r = (redisReply*)redisCommand(c, "RPUSH %s:%s:%d:~time~ %s", 
       t->test, 

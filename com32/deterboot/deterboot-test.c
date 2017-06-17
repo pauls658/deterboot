@@ -31,15 +31,14 @@
 #include "testing.h"
 #include "walrus.h"
 
-int test_getNetInfo(void);
-int test_bootWhat_mfs(void);
+int do_getNetInfo(void);
 int tryBoot(void);
 
 struct NetInfo netinfo;
 
 struct WTFTest wtf = {
-  .collector = "192.168.1.247", 
-  .test = "boot-mfs", 
+  .collector = "walrus", 
+  .test = "preboot", 
   .participant = "deterboot",
   .counter = 0
 };
@@ -48,7 +47,7 @@ int main(void)
 {
   lwip_socket_init();
 
-  test_getNetInfo();
+  do_getNetInfo();
 
   WTFok(&wtf, "starting boot process");
   int response = tryBoot();
@@ -60,7 +59,7 @@ int main(void)
   printf("boot process finished\n");
 }
 
-int test_getNetInfo(void)
+int do_getNetInfo(void)
 {
   int err = getNetInfo(&netinfo);
   if(err) 
@@ -69,19 +68,13 @@ int test_getNetInfo(void)
     return TEST_ERROR;
   }
 
-  char *me = inet_ntoa(netinfo.myAddr);
-  char *buf = malloc(strlen(wtf.participant)+3);
-  sprintf(buf, "%s-%s", wtf.participant, &me[strlen(me)-3]);
-  wtf.participant = buf;
+  wtf.participant = netinfo.host;
 
-  u32_t bossExpected = inet_addr("192.168.252.1"); 
-  if(bossExpected != netinfo.bossAddr.s_addr)
-  {
-    WTFerror(&wtf, "unexpected boss address %s", inet_ntoa(netinfo.bossAddr));
-    return TEST_ERROR;
-  }
+  char* buf = malloc(strlen("walrus.") + strlen(netinfo.domain));
+  sprintf(buf, "walrus.%s", netinfo.domain);
+  wtf.collector = buf;
 
-  WTFok(&wtf, "getNetInfo test finished");
+  WTFok(&wtf, "getNetInfo finished");
   return TEST_OK;
 }
 
@@ -122,10 +115,16 @@ int tryBoot(void)
   }
 
 	switch(br.what->type) {
-		case BIBOOTWHAT_TYPE_MFS: doMFSBoot(br.what->what.mfs); break;
-		case BIBOOTWHAT_TYPE_PART: doChainBoot("hd0", br.what->what.partition); break;
+		case BIBOOTWHAT_TYPE_MFS: 
+      doMFSBoot(br.what->what.mfs); 
+      break;
+
+		case BIBOOTWHAT_TYPE_PART: 
+      doChainBoot("hd0", br.what->what.partition); 
+      break;
+
     case BIBOOTWHAT_TYPE_WAIT: 
-      WTFok(&wtf, "entering wait period");
+      //WTFok(&wtf, "entering wait period");
       printf("\rwaiting ... ");
       return BIBOOTWHAT_TYPE_WAIT;
 		

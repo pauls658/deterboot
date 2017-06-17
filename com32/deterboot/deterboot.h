@@ -29,6 +29,7 @@ struct NetInfo
 {
   struct in_addr myAddr,
                  bossAddr;
+  char *host, *domain;
 };
 
 int getNetInfo(struct NetInfo *);

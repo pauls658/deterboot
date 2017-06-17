@@ -51,6 +51,21 @@ int getNetInfo(struct NetInfo *info)
   info->myAddr.s_addr = pkt->yiaddr;
   info->bossAddr.s_addr = pkt->siaddr;
 
+  struct dhcp_option opts[256];
+  dhcp_unpack_packet(pkt, dhcplen, opts);
+
+  char *search = (char*)opts[15].data;
+  printf("search domain: %s\n", search);
+  info->domain = malloc(strlen(search)+1);
+  strncpy(info->domain, search, strlen(search));
+  info->domain[strlen(search)] = 0;
+
+  char *host = (char*)opts[12].data;
+  printf("my hostname: %s\n", host);
+  info->host = malloc(strlen(host)+1);
+  strncpy(info->host, host, strlen(host));
+  info->host[strlen(host)] = 0;
+
   return 0;
 }
 
