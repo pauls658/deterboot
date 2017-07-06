@@ -48,7 +48,7 @@ int main(void)
 
   switch(bootinfo.what->type)
   {
-    case BIBOOTWHAT_TYPE_MFS: bootMfs(&bootinfo); break;
+    case BIBOOTWHAT_TYPE_MFS: bootMFS(bootinfo.what->what.mfs); break;
     default:  unknownBootType(&bootinfo);
   }
 
